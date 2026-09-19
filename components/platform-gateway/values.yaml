@@ -19,8 +19,15 @@ gateways:
     className: istio
     # Hostnames this gateway serves. Routes must use a hostname inside it.
     hostname: "*.example.com"
-    # kind has no cloud load balancer. Use LoadBalancer on EKS/GKE/AKS.
-    serviceType: ClusterIP
+    # kind has no cloud load balancer, so expose fixed NodePorts and let the
+    # edge load balancer (cluster/edge-lb, stands in for a cloud LB) publish
+    # them on the laptop. On EKS/GKE/AKS: serviceType LoadBalancer, no nodePorts.
+    serviceType: NodePort
+    nodePorts:
+      https: 30443
+      http: 30080
+    # Port the HTTP->HTTPS redirect points at. Omit when clients use 443.
+    redirectPort: 8443
     # Namespaces need this label (value "true") to attach routes.
     accessLabel: gateway-access/public
     # High availability: every app behind this gateway depends on it.
@@ -41,7 +48,11 @@ gateways:
     enabled: true
     className: istio
     hostname: "*.internal.example.com"
-    serviceType: ClusterIP
+    serviceType: NodePort
+    nodePorts:
+      https: 31443
+      http: 31080
+    redirectPort: 9443
     accessLabel: gateway-access/internal
     autoscaling:
       minReplicas: 1

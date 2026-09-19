@@ -10,6 +10,16 @@ metadata:
   labels:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
 data:
+  {{- with $gw.nodePorts }}
+  # Pin NodePorts so the edge load balancer can target them.
+  service: |
+    spec:
+      ports:
+        - port: 443
+          nodePort: {{ .https }}
+        - port: 80
+          nodePort: {{ .http }}
+  {{- end }}
   deployment: |
     spec:
       template:
@@ -110,5 +120,8 @@ spec:
           requestRedirect:
             scheme: https
             statusCode: 301
+            {{- with $gw.redirectPort }}
+            port: {{ . }}
+            {{- end }}
 {{- end }}
 {{- end }}
