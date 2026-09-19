@@ -7,6 +7,10 @@ configs:
   params:
     # TLS ends at the internal gateway; argocd-server speaks plain HTTP behind it.
     server.insecure: true
+    # Diff against what the API server would store (including defaulted fields
+    # like HTTPRoute backendRef weight/kind), not against raw Git YAML.
+    # Without it, server-side-applied resources look permanently OutOfSync.
+    controller.diff.server.side: true
   cm:
     # Poll Git every 30s (lab speed; production would use webhooks).
     timeout.reconciliation: 30s
