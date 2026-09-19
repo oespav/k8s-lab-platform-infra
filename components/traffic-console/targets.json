@@ -7,7 +7,10 @@
     "host": "hello.apps.localhost",
     "path": "/hello",
     "rps": 10,
-    "canaryHeader": {"name": "x-canary", "value": "true"}
+    "canaryHeader": {
+      "name": "x-canary",
+      "value": "true"
+    }
   },
   {
     "id": "hello-beta",
@@ -15,6 +18,17 @@
     "team": "team-beta",
     "gateway": "internal-istio.infra-gw.svc.cluster.local",
     "host": "tools.internal.localhost",
+    "path": "/hello",
+    "rps": 5
+  },
+  {
+    "id": "hello-alpha-direct",
+    "name": "hello-alpha (east-west)",
+    "team": "team-alpha",
+    "scheme": "http",
+    "gateway": "hello-alpha-v1.team-alpha.svc.cluster.local",
+    "port": 5000,
+    "host": "hello-alpha-v1.team-alpha.svc.cluster.local",
     "path": "/hello",
     "rps": 5
   }

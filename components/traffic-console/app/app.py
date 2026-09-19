@@ -49,8 +49,11 @@ class Target:
         self.id = cfg["id"]
         self.name = cfg["name"]
         self.team = cfg.get("team", "")
+        # "https" goes through a gateway (north-south); "http" calls a Service
+        # directly (east-west), where the mesh adds mTLS transparently.
+        self.scheme = cfg.get("scheme", "https")
         self.gateway = cfg["gateway"]
-        self.port = int(cfg.get("port", 443))
+        self.port = int(cfg.get("port", 443 if self.scheme == "https" else 80))
         self.host = cfg["host"]
         self.path = cfg.get("path", "/")
         self.canary_header = cfg.get("canaryHeader")  # {"name":..., "value":...} or None
@@ -93,8 +96,11 @@ class Target:
             buckets = {s: b for s, b in self.buckets.items()}
             state = {
                 "id": self.id, "name": self.name, "team": self.team,
-                "host": self.host, "path": self.path,
-                "gateway": f"{self.gateway}:{self.port}",
+                "host": self.host, "path": self.path, "scheme": self.scheme,
+                "url": f"{self.scheme}://{self.host}{self.path}" if self.scheme == "https"
+                       else f"http://{self.gateway}:{self.port}{self.path}",
+                "via": f"{self.gateway}:{self.port}" if self.scheme == "https"
+                       else "direct to Service (east-west, no gateway)",
                 "rps": self.rps, "running": self.running,
                 "canary": self.canary,
                 "canaryHeader": self.canary_header,
@@ -139,7 +145,11 @@ def send_one(target):
         conns = _local.conns = {}
     conn = conns.get(target.id)
     if conn is None:
-        conn = conns[target.id] = GatewayConnection(target.gateway, target.port, target.host)
+        if target.scheme == "http":
+            conn = http.client.HTTPConnection(target.gateway, target.port, timeout=5)
+        else:
+            conn = GatewayConnection(target.gateway, target.port, target.host)
+        conns[target.id] = conn
     headers = {"Host": target.host, "User-Agent": "traffic-console/1.0"}
     if target.canary and target.canary_header:
         headers[target.canary_header["name"]] = target.canary_header["value"]

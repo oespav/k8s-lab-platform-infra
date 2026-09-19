@@ -7,6 +7,7 @@ metadata:
   labels:
     gateway-access/internal: "true"
     team: team-beta
+    istio.io/dataplane-mode: ambient   # in the mesh: mTLS + identity on every connection
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -35,6 +36,8 @@ spec:
     - {group: gateway.networking.k8s.io, kind: HTTPRoute}
     - {group: autoscaling, kind: HorizontalPodAutoscaler}
     - {group: policy, kind: PodDisruptionBudget}
+    # Teams decide who may call their services (identity-based, enforced by ztunnel).
+    - {group: security.istio.io, kind: AuthorizationPolicy}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

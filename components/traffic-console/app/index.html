@@ -144,7 +144,7 @@
 <main>
   <header>
     <h1>Traffic console</h1>
-    <p>Sends HTTPS requests to each app through its shared gateway and shows which version answered. Updates every second.</p>
+    <p>Sends requests to each app, through its shared gateway (north-south) or straight to its Service (east-west), and shows which version answered. Updates every second.</p>
     <div class="banner" id="banner" role="status"><span class="icon" aria-hidden="true">✕</span>Lost contact with the console backend. Retrying…</div>
   </header>
   <div class="grid" id="cards"></div>
@@ -388,7 +388,7 @@ function render(c) {
   const versions = versionsOf(t);
   c.title.textContent = t.name;
   c.team.textContent = t.team;
-  c.route.textContent = `GET https://${t.host}${t.path}  →  ${t.gateway}`;
+  c.route.textContent = `GET ${t.url}  →  ${t.via}`;
   c.toggle.textContent = t.running ? "Pause" : "Start";
   if (!c.dragging && document.activeElement !== c.slider) {
     c.slider.value = String(t.rps);
