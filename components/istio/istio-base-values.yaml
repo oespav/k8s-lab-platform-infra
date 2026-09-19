@@ -1,0 +1,2 @@
+# istio/base: cluster-wide CRDs and roles. Defaults are fine.
+{}

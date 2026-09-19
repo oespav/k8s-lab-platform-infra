@@ -1,0 +1,8 @@
+# trust-manager copies CA certificates into ConfigMaps across namespaces, so
+# workloads can verify TLS served by the lab CA. Sources are read from the
+# trust namespace, where our root CA secret lives.
+app:
+  trust:
+    namespace: cert-manager
+resources:
+  requests: {cpu: 10m, memory: 32Mi}

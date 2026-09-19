@@ -1,0 +1,22 @@
+# Platform-owned namespaces. Team namespaces live in argocd/tenants/.
+# gateway-access/* labels decide which shared Gateway a namespace may use.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infra-gw
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    gateway-access/internal: "true"     # Argo CD UI route
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traffic-console
+  labels:
+    gateway-access/internal: "true"

@@ -1,0 +1,7 @@
+# metrics-server feeds CPU/memory to `kubectl top` and to every
+# HorizontalPodAutoscaler (e.g. the public gateway's 2-5 replica HPA).
+args:
+  # kind's kubelets use self-signed serving certs. Never set this on a real cluster.
+  - --kubelet-insecure-tls
+resources:
+  requests: {cpu: 20m, memory: 48Mi}

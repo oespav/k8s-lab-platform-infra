@@ -1,0 +1,4 @@
+# Everything here is reviewed by the platform team.
+* @platform-team
+# Onboarding changes also need a security reviewer in a real org.
+argocd/tenants/ @platform-team

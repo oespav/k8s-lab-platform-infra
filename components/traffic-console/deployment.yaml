@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-console
+spec:
+  replicas: 1
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: console
+          image: docker.io/library/python:3.13-alpine
+          command: ["python", "-u", "/app/app.py"]
+          env:
+            - {name: TARGETS_FILE, value: /etc/traffic-console/targets.json}
+            - {name: CA_FILE, value: /etc/lab-ca/ca.crt}
+            - {name: STATIC_DIR, value: /app}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+          resources:
+            requests: {cpu: 50m, memory: 48Mi}
+            limits: {memory: 128Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: app, mountPath: /app}
+            - {name: targets, mountPath: /etc/traffic-console}
+            - {name: lab-ca, mountPath: /etc/lab-ca}
+      volumes:
+        - name: app
+          configMap: {name: traffic-console-app}
+        - name: targets
+          configMap: {name: traffic-console-targets}
+        # Distributed to every namespace by trust-manager (components/pki).
+        - name: lab-ca
+          configMap: {name: lab-ca-bundle}

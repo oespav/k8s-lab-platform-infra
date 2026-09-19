@@ -1,0 +1,26 @@
+# The one Application applied by hand. It syncs everything under argocd/
+# (projects, platform components, tenants); from then on Git is the source
+# of truth and changes happen through commits, not kubectl.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: platform
+  source:
+    repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    targetRevision: main
+    path: argocd
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff: {duration: 10s, factor: 2, maxDuration: 3m}

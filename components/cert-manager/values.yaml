@@ -1,0 +1,11 @@
+crds:
+  enabled: true
+  keep: true     # keep CRDs (and so every Certificate) if the app is removed
+resources:
+  requests: {cpu: 10m, memory: 64Mi}
+webhook:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+cainjector:
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}

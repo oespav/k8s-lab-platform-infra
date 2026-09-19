@@ -1,0 +1,67 @@
+# Tenant: team-beta. Onboarding a team = one file like this, reviewed by the platform team.
+# The team owns what's in its repo; this file decides WHERE it may go and WHAT it may create.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-beta
+  labels:
+    gateway-access/internal: "true"
+    team: team-beta
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-beta
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  description: Team Beta: internal hello-beta tool
+  # Only the team's own GitHub org.
+  sourceRepos:
+    - http://gitea.github-sim.svc.cluster.local:3000/team-beta/*
+  # Only the team's own namespace.
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: team-beta
+  # No cluster-scoped resources (Namespaces, ClusterRoles, CRDs, ...).
+  clusterResourceWhitelist: []
+  # Only the namespaced kinds an app team needs.
+  namespaceResourceWhitelist:
+    - {group: apps, kind: Deployment}
+    - {group: "", kind: Service}
+    - {group: "", kind: ConfigMap}
+    - {group: "", kind: ServiceAccount}
+    - {group: gateway.networking.k8s.io, kind: HTTPRoute}
+    - {group: autoscaling, kind: HorizontalPodAutoscaler}
+    - {group: policy, kind: PodDisruptionBudget}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-beta
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: team-beta
+  source:
+    repoURL: http://gitea.github-sim.svc.cluster.local:3000/team-beta/hello-beta.git
+    targetRevision: main
+    path: chart
+    helm:
+      releaseName: hello-beta
+      valueFiles:
+        - ../environments/lab/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team-beta
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff: {duration: 10s, factor: 2, maxDuration: 2m}

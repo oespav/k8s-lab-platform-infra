@@ -1,0 +1,36 @@
+# Argo CD manages itself. bootstrap/ installs it once with Helm using the
+# same chart version and values; this Application then adopts it, so later
+# Argo CD upgrades are just a commit changing targetRevision below.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  # No resources-finalizer: deleting this Application must never delete Argo CD.
+spec:
+  project: platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
+      targetRevision: 10.9.2
+      helm:
+        releaseName: argocd
+        valueFiles:
+          - $values/components/argocd/values.yaml
+    - repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+      targetRevision: main
+      ref: values
+    - repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+      targetRevision: main
+      path: components/argocd/extra
+  syncPolicy:
+    automated:
+      prune: false      # never auto-delete parts of the tool doing the deleting
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

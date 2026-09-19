@@ -1,0 +1,8 @@
+# istio/istiod: the control plane. Sized down for a laptop.
+pilot:
+  autoscaleEnabled: false
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi

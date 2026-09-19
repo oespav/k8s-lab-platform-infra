@@ -1,0 +1,36 @@
+# Lab PKI, in three steps:
+#   1. a self-signed issuer (only used to mint the root)
+#   2. a root CA certificate, stored in Secret cert-manager/lab-root-ca
+#   3. the "lab-ca" ClusterIssuer that signs every other cert with that root
+# In production step 1-2 would be your company CA, Vault, or Let's Encrypt.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lab-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: k8s-lab Root CA
+  secretName: lab-root-ca
+  duration: 87600h      # 10 years
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: lab-ca
+spec:
+  ca:
+    secretName: lab-root-ca

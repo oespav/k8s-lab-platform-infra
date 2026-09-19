@@ -1,0 +1,56 @@
+# Shared gateways, one per exposure level. Install this chart once per
+# cluster, in its own namespace (e.g. infra-gw).
+#
+# Each gateway has two listeners:
+#   https (443) - app routes attach here (sectionName: https). TLS uses a
+#                 wildcard cert issued by cert-manager from the "lab-ca" issuer.
+#   http  (80)  - only a platform-owned redirect to HTTPS; apps can't attach.
+# App namespaces need the gateway's access label (e.g. gateway-access/public=true)
+# to attach routes; tenants get it from argocd/tenants/<team>.yaml.
+
+tls:
+  issuer:
+    kind: ClusterIssuer
+    name: lab-ca
+
+gateways:
+  public:
+    enabled: true
+    className: istio
+    # Hostnames this gateway serves. Routes must use a hostname inside it.
+    hostname: "*.example.com"
+    # kind has no cloud load balancer. Use LoadBalancer on EKS/GKE/AKS.
+    serviceType: ClusterIP
+    # Namespaces need this label (value "true") to attach routes.
+    accessLabel: gateway-access/public
+    # High availability: every app behind this gateway depends on it.
+    autoscaling:
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 70
+    podDisruptionBudget:
+      minAvailable: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  internal:
+    enabled: true
+    className: istio
+    hostname: "*.internal.example.com"
+    serviceType: ClusterIP
+    accessLabel: gateway-access/internal
+    autoscaling:
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 70
+    podDisruptionBudget: {}
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 256Mi

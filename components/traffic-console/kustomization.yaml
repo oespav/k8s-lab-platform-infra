@@ -1,0 +1,23 @@
+# Platform-owned traffic generator + dashboard for the tenant apps.
+# configMapGenerator adds a content hash to the ConfigMap names, so editing
+# app.py, index.html or targets.json rolls the Deployment automatically.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: traffic-console
+labels:
+  - pairs:
+      app.kubernetes.io/name: traffic-console
+      app.kubernetes.io/part-of: platform
+    includeSelectors: true
+resources:
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+configMapGenerator:
+  - name: traffic-console-app
+    files:
+      - app/app.py
+      - app/index.html
+  - name: traffic-console-targets
+    files:
+      - targets.json

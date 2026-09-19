@@ -1,0 +1,6 @@
+apiVersion: v2
+name: platform-gateway
+description: Shared Istio Gateway API gateways owned by the platform team. App teams attach HTTPRoutes to them.
+type: application
+version: 0.2.0
+appVersion: "1.30"

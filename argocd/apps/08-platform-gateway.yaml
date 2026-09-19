@@ -1,0 +1,28 @@
+# Sync wave -3: the root app waits for lower waves to be Healthy first.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: infra-gw
+  source:
+    repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    targetRevision: main
+    path: components/platform-gateway
+    helm:
+      releaseName: platform-gateway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff: {duration: 10s, factor: 2, maxDuration: 3m}

@@ -1,0 +1,16 @@
+# https://traffic.internal.example.com via the internal gateway.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: traffic-console
+spec:
+  parentRefs:
+    - name: internal
+      namespace: infra-gw
+      sectionName: https
+  hostnames:
+    - traffic.internal.example.com
+  rules:
+    - backendRefs:
+        - name: traffic-console
+          port: 80

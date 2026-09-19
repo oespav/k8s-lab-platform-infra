@@ -1,0 +1,47 @@
+# Used twice: by bootstrap (helm install) and by the self-managing
+# "argocd" Application. Keep them identical or Argo CD will fight itself.
+global:
+  domain: argocd.internal.example.com
+
+configs:
+  params:
+    # TLS ends at the internal gateway; argocd-server speaks plain HTTP behind it.
+    server.insecure: true
+  cm:
+    # Poll Git every 30s (lab speed; production would use webhooks).
+    timeout.reconciliation: 30s
+    timeout.reconciliation.jitter: 0s
+    # Report child Application health, so sync waves in the root app wait
+    # for each platform component to be Healthy before starting the next.
+    resource.customizations.health.argoproj.io_Application: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = ""
+      if obj.status ~= nil and obj.status.health ~= nil then
+        hs.status = obj.status.health.status
+        if obj.status.health.message ~= nil then
+          hs.message = obj.status.health.message
+        end
+      end
+      return hs
+
+dex:
+  enabled: false
+notifications:
+  enabled: false
+
+controller:
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+repoServer:
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+server:
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+applicationSet:
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}
+redis:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}

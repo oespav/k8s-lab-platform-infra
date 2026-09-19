@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traffic Console</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface-1: #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --control: #f0efec;
+    --accent: #2a78d6;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --critical: #d03b3b;
+    --good-text: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface-1: #1a1a19;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --control: #262624;
+      --accent: #3987e5;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --good-text: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --control: #262624;
+    --accent: #3987e5;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --good-text: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--text-secondary); }
+  .banner {
+    display: none; margin-top: 12px; padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary);
+  }
+  .banner.show { display: block; }
+  .banner .icon { color: var(--critical); font-weight: 700; margin-right: 6px; }
+  .grid {
+    display: grid; gap: 16px; margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  }
+  .card {
+    position: relative; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 18px 14px; min-width: 0;
+  }
+  .card-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .card-head h2 { font-size: 17px; font-weight: 600; margin: 0; }
+  .chip {
+    font-size: 12px; color: var(--text-secondary); border: 1px solid var(--border);
+    border-radius: 999px; padding: 1px 8px;
+  }
+  .route {
+    margin: 4px 0 14px; color: var(--text-muted); font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere;
+  }
+  .controls { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 6px 14px;
+    border: 1px solid var(--border); background: var(--control); color: var(--text-primary);
+  }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rps { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+  .rps input { width: 150px; accent-color: var(--accent); }
+  .rps output { min-width: 56px; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .canary { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+  .canary code { font-size: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat-label { font-size: 12px; color: var(--text-secondary); }
+  .stat-value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .stat-value small { font-size: 13px; font-weight: 400; color: var(--text-secondary); }
+  .split-row { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 3px; }
+  .split-row strong { font-weight: 600; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .err-icon { color: var(--critical); font-weight: 700; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-wrap { position: relative; }
+  svg.chart { display: block; width: 100%; height: 180px; overflow: visible; }
+  svg.chart text { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .tooltip {
+    position: absolute; pointer-events: none; display: none; z-index: 2; min-width: 130px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); font-size: 12px;
+  }
+  .tooltip .tt-title { color: var(--text-muted); margin-bottom: 4px; }
+  .tooltip .tt-row { display: flex; align-items: center; gap: 8px; }
+  .tooltip .tt-row strong { color: var(--text-primary); min-width: 24px; text-align: right; font-variant-numeric: tabular-nums; }
+  .tooltip .tt-row span { color: var(--text-secondary); }
+  .tooltip .key { width: 12px; height: 2px; border-radius: 1px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; flex-wrap: wrap; }
+  .foot .hint { font-size: 12px; color: var(--text-muted); }
+  .linkish { background: none; border: none; padding: 0; color: var(--accent); font-weight: 500; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-secondary); font-weight: 500; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Traffic console</h1>
+    <p>Sends HTTPS requests to each app through its shared gateway and shows which version answered. Updates every second.</p>
+    <div class="banner" id="banner" role="status"><span class="icon" aria-hidden="true">✕</span>Lost contact with the console backend. Retrying…</div>
+  </header>
+  <div class="grid" id="cards"></div>
+</main>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+const cards = new Map();
+
+// Color follows the version, never its rank: v1 is always slot 1, v2 slot 2...
+function versionSlot(v) {
+  const n = parseInt(String(v).replace(/\D/g, ""), 10);
+  return Number.isFinite(n) && n >= 1 && n <= 4 ? n : 4;
+}
+const seriesColor = v => `var(--series-${versionSlot(v)})`;
+const ERROR_COLOR = "var(--critical)";
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v;
+    else if (k === "style") node.style.cssText = v;
+    else node.setAttribute(k, v);
+  }
+  for (const c of children) node.append(c);
+  return node;
+}
+function svgEl(tag, attrs = {}) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  return node;
+}
+
+async function post(id, body) {
+  try {
+    await fetch(`api/targets/${encodeURIComponent(id)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+  } catch (e) { /* the next poll shows the real state */ }
+}
+
+function buildCard(t) {
+  const c = { id: t.id, hover: null, showTable: false, dragging: false };
+  c.title = el("h2");
+  c.team = el("span", { class: "chip" });
+  c.route = el("div", { class: "route" });
+
+  c.toggle = el("button", { type: "button" });
+  c.toggle.addEventListener("click", () => post(t.id, { running: !c.state.running }));
+
+  c.slider = el("input", { type: "range", min: "0", max: "50", step: "1", "aria-label": "Requests per second" });
+  c.rpsOut = el("output");
+  c.slider.addEventListener("input", () => { c.dragging = true; c.rpsOut.textContent = `${c.slider.value} rps`; });
+  c.slider.addEventListener("change", () => { c.dragging = false; post(t.id, { rps: Number(c.slider.value) }); });
+  const rps = el("label", { class: "rps" }, "Target", c.slider, c.rpsOut);
+
+  const controls = el("div", { class: "controls" }, c.toggle, rps);
+  if (t.canaryHeader) {
+    c.canary = el("input", { type: "checkbox" });
+    c.canary.addEventListener("change", () => post(t.id, { canary: c.canary.checked }));
+    const code = el("code");
+    code.textContent = `${t.canaryHeader.name}: ${t.canaryHeader.value}`;
+    controls.append(el("label", { class: "canary" }, c.canary, "Send ", code));
+  }
+
+  c.stats = el("div", { class: "stats" });
+  c.legend = el("div", { class: "legend" });
+  c.svg = svgEl("svg", { class: "chart", role: "img" });
+  c.tooltip = el("div", { class: "tooltip" });
+  const wrap = el("div", { class: "chart-wrap" }, c.svg, c.tooltip);
+  c.svg.addEventListener("pointerleave", () => { c.hover = null; render(c); });
+
+  c.tableBtn = el("button", { type: "button", class: "linkish" });
+  c.tableBtn.addEventListener("click", () => { c.showTable = !c.showTable; render(c); });
+  c.tableBox = el("div");
+  const hint = el("span", { class: "hint" }, "Responses per second, last 60 s");
+  const foot = el("div", { class: "foot" }, hint, c.tableBtn);
+
+  c.root = el("section", { class: "card" },
+    el("div", { class: "card-head" }, c.title, c.team), c.route, controls, c.stats, c.legend, wrap, foot, c.tableBox);
+  document.getElementById("cards").append(c.root);
+  new ResizeObserver(() => c.state && render(c)).observe(wrap);
+  return c;
+}
+
+function versionsOf(t) {
+  const set = new Set(Object.keys(t.summary.versions));
+  for (const s of t.series) for (const v of Object.keys(s.versions)) set.add(v);
+  return [...set].sort((a, b) => versionSlot(a) - versionSlot(b) || a.localeCompare(b));
+}
+
+function stat(label, ...valueNodes) {
+  return el("div", {}, el("div", { class: "stat-label" }, label), el("div", { class: "stat-value" }, ...valueNodes));
+}
+
+function renderStats(c, t, versions) {
+  const s = t.summary;
+  const total = Object.values(s.versions).reduce((a, b) => a + b, 0);
+  const errTotal = Object.values(s.errors).reduce((a, b) => a + b, 0);
+
+  const split = el("div", {}, el("div", { class: "stat-label" }, `Split, last ${s.windowSeconds} s`));
+  if (!versions.length) split.append(el("div", { class: "split-row" }, "No responses yet"));
+  for (const v of versions) {
+    const n = s.versions[v] || 0;
+    const pct = total ? Math.round((n / total) * 100) : 0;
+    const strong = el("strong"); strong.textContent = `${pct}%`;
+    const name = el("span"); name.textContent = v;
+    split.append(el("div", { class: "split-row" },
+      el("span", { class: "swatch", style: `background:${seriesColor(v)}` }), name, strong));
+  }
+
+  const small = el("small"); small.textContent = " rps";
+  const p = el("small"); p.textContent = s.p95 == null ? "" : ` / ${Math.round(s.p95)} ms p95`;
+  const errValue = errTotal
+    ? [el("span", { class: "err-icon", "aria-hidden": "true" }, "✕ "), String(errTotal)]
+    : ["0"];
+  const errBox = stat(`Errors, last ${s.windowSeconds} s`, ...errValue);
+  if (errTotal) {
+    const detail = el("div", { class: "split-row" });
+    detail.textContent = Object.entries(s.errors).map(([k, n]) => `${k}: ${n}`).join(", ");
+    errBox.append(detail);
+  }
+
+  c.stats.replaceChildren(
+    stat("Sent", String(s.actualRps), small),
+    split,
+    stat("Latency p50", s.p50 == null ? "–" : `${Math.round(s.p50)} ms`, p),
+    errBox,
+  );
+}
+
+function renderLegend(c, versions, hasErrors) {
+  const items = versions.map(v => [v, seriesColor(v)]);
+  if (hasErrors) items.push(["Errors", ERROR_COLOR]);
+  c.legend.replaceChildren(...items.map(([name, color]) => {
+    const label = el("span", {}, el("span", { class: "swatch", style: `background:${color}` }));
+    label.append(name);
+    return label;
+  }));
+}
+
+function niceMax(v) {
+  if (v <= 4) return 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * mag >= v) return m * mag;
+  return 10 * mag;
+}
+
+function roundedTop(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+
+function renderChart(c, t, versions) {
+  const svg = c.svg;
+  const W = svg.clientWidth || 500, H = 180;
+  const m = { l: 34, r: 6, t: 8, b: 22 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const totals = t.series.map(s => Object.values(s.versions).reduce((a, b) => a + b, 0) + s.errors);
+  const max = niceMax(Math.max(...totals, t.running ? t.rps : 0));
+  const y = v => m.t + ph - (v / max) * ph;
+  const nodes = [];
+
+  for (const tick of [0, max / 2, max]) {
+    const yy = Math.round(y(tick)) + 0.5;
+    nodes.push(svgEl("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy,
+      stroke: tick === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }));
+    const label = svgEl("text", { x: m.l - 6, y: yy + 4, "text-anchor": "end" });
+    label.textContent = Number.isInteger(tick) ? tick : tick.toFixed(1);
+    nodes.push(label);
+  }
+  for (const [i, text] of [[0, "−60 s"], [30, "−30 s"], [59, "now"]]) {
+    const label = svgEl("text", { x: m.l + (i + 0.5) * (pw / 60), y: H - 6, "text-anchor": i === 0 ? "start" : i === 59 ? "end" : "middle" });
+    label.textContent = text;
+    nodes.push(label);
+  }
+
+  const slot = pw / 60, barW = Math.max(1, Math.min(24, slot - 2)), GAP = 2;
+  t.series.forEach((s, i) => {
+    const x = m.l + i * slot + (slot - barW) / 2;
+    const segs = versions.filter(v => s.versions[v]).map(v => [s.versions[v], seriesColor(v)]);
+    if (s.errors) segs.push([s.errors, ERROR_COLOR]);
+    const g = svgEl("g", { opacity: c.hover == null || c.hover === i ? 1 : 0.45 });
+    let base = y(0);
+    segs.forEach(([n, color], k) => {
+      let h = (n / max) * ph;
+      let bottom = base;
+      if (k > 0) { bottom -= GAP; h = Math.max(0, h - GAP); }  // 2px surface gap between segments
+      const top = bottom - h;
+      if (h > 0) {
+        g.append(k === segs.length - 1
+          ? svgEl("path", { d: roundedTop(x, top, barW, h, 4), fill: color })
+          : svgEl("rect", { x, y: top, width: barW, height: h, fill: color }));
+      }
+      base = top;
+    });
+    nodes.push(g);
+    const hit = svgEl("rect", { x: m.l + i * slot, y: m.t, width: slot, height: ph, fill: "transparent" });
+    hit.addEventListener("pointermove", () => { if (c.hover !== i) { c.hover = i; render(c); } });
+    nodes.push(hit);
+  });
+  svg.replaceChildren(...nodes);
+  svg.setAttribute("aria-label", `${t.name}: responses per second by version over the last 60 seconds`);
+
+  if (c.hover == null) { c.tooltip.style.display = "none"; return; }
+  const s = t.series[c.hover];
+  const rows = versions.map(v => [s.versions[v] || 0, v, seriesColor(v)]);
+  if (s.errors) rows.push([s.errors, "Errors", ERROR_COLOR]);
+  const title = el("div", { class: "tt-title" });
+  title.textContent = `${-s.t} s ago`;
+  c.tooltip.replaceChildren(title, ...rows.map(([n, name, color]) => {
+    const strong = el("strong"); strong.textContent = String(n);
+    const label = el("span"); label.textContent = name;
+    return el("div", { class: "tt-row" }, strong, el("span", { class: "key", style: `background:${color}` }), label);
+  }));
+  c.tooltip.style.display = "block";
+  const cx = m.l + (c.hover + 0.5) * slot;
+  const tw = c.tooltip.offsetWidth;
+  c.tooltip.style.left = `${Math.min(Math.max(0, cx - tw / 2), W - tw)}px`;
+  c.tooltip.style.top = `${-c.tooltip.offsetHeight - 6}px`;
+}
+
+function renderTable(c, t, versions) {
+  c.tableBtn.textContent = c.showTable ? "Hide table" : "View as table";
+  if (!c.showTable) { c.tableBox.replaceChildren(); return; }
+  const head = el("tr", {}, el("th", {}, "Second"));
+  for (const v of versions) { const th = el("th"); th.textContent = v; head.append(th); }
+  head.append(el("th", {}, "Errors"));
+  const body = t.series.slice(-10).reverse().map(s => {
+    const tr = el("tr", {}, el("td", {}, `${s.t} s`));
+    for (const v of versions) tr.append(el("td", {}, String(s.versions[v] || 0)));
+    tr.append(el("td", {}, String(s.errors)));
+    return tr;
+  });
+  c.tableBox.replaceChildren(el("table", {}, el("thead", {}, head), el("tbody", {}, ...body)));
+}
+
+function render(c) {
+  const t = c.state;
+  const versions = versionsOf(t);
+  c.title.textContent = t.name;
+  c.team.textContent = t.team;
+  c.route.textContent = `GET https://${t.host}${t.path}  →  ${t.gateway}`;
+  c.toggle.textContent = t.running ? "Pause" : "Start";
+  if (!c.dragging && document.activeElement !== c.slider) {
+    c.slider.value = String(t.rps);
+    c.rpsOut.textContent = `${t.rps} rps`;
+  }
+  if (c.canary && document.activeElement !== c.canary) c.canary.checked = t.canary;
+  renderStats(c, t, versions);
+  renderLegend(c, versions, t.series.some(s => s.errors) || Object.keys(t.summary.errors).length > 0);
+  renderChart(c, t, versions);
+  renderTable(c, t, versions);
+}
+
+async function poll() {
+  try {
+    const res = await fetch("api/state", { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    document.getElementById("banner").classList.remove("show");
+    for (const t of data.targets) {
+      const c = cards.get(t.id) || cards.set(t.id, buildCard(t)).get(t.id);
+      c.state = t;
+      render(c);
+    }
+  } catch (e) {
+    document.getElementById("banner").classList.add("show");
+  }
+  setTimeout(poll, 1000);
+}
+poll();
+</script>
+</body>
+</html>
