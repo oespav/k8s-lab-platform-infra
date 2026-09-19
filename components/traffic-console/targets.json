@@ -4,7 +4,7 @@
     "name": "hello-alpha",
     "team": "team-alpha",
     "gateway": "public-istio.infra-gw.svc.cluster.local",
-    "host": "hello.example.com",
+    "host": "hello.apps.localhost",
     "path": "/hello",
     "rps": 10,
     "canaryHeader": {"name": "x-canary", "value": "true"}
@@ -14,7 +14,7 @@
     "name": "hello-beta",
     "team": "team-beta",
     "gateway": "internal-istio.infra-gw.svc.cluster.local",
-    "host": "tools.internal.example.com",
+    "host": "tools.internal.localhost",
     "path": "/hello",
     "rps": 5
   }

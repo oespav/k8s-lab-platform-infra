@@ -33,7 +33,7 @@ _local = threading.local()
 
 class GatewayConnection(http.client.HTTPSConnection):
     """Connects to the gateway Service but presents the app hostname as SNI,
-    exactly like a browser resolving hello.example.com to the gateway would."""
+    exactly like a browser resolving hello.apps.localhost to the gateway would."""
 
     def __init__(self, gateway, port, sni, timeout=5):
         super().__init__(gateway, port, context=TLS_CONTEXT, timeout=timeout)

@@ -1,4 +1,4 @@
-# https://traffic.internal.example.com via the internal gateway.
+# https://traffic.internal.localhost via the internal gateway.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -9,7 +9,7 @@ spec:
       namespace: infra-gw
       sectionName: https
   hostnames:
-    - traffic.internal.example.com
+    - traffic.internal.localhost
   rules:
     - backendRefs:
         - name: traffic-console

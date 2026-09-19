@@ -58,6 +58,14 @@ AppProject (own repo, own namespace, no cluster-scoped resources) and the
 Application that deploys `chart/` with `environments/lab/values.yaml` from
 the team's repo.
 
+## Hostnames
+
+Gateways serve `*.apps.localhost` (public) and `*.internal.localhost`
+(internal). Browsers, curl and git resolve every `*.localhost` name to the
+local machine by themselves, so the lab needs no DNS or /etc/hosts entries,
+and the two domains don't overlap (a Gateway API wildcard covers every
+subdomain depth, so `*.example.com` would also have matched internal names).
+
 ## Upgrade a component
 
 Change `targetRevision` in `argocd/apps/<component>.yaml` (or the values

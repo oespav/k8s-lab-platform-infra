@@ -1,7 +1,7 @@
 # Used twice: by bootstrap (helm install) and by the self-managing
 # "argocd" Application. Keep them identical or Argo CD will fight itself.
 global:
-  domain: argocd.internal.example.com
+  domain: argocd.internal.localhost
 
 configs:
   params:

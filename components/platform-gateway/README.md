@@ -5,8 +5,8 @@ Argo CD (`argocd/apps/08-platform-gateway.yaml`) into `infra-gw`.
 
 | Gateway | Hostnames | Access label | Replicas (HPA) | PDB |
 |---|---|---|---|---|
-| `public` | `*.example.com` | `gateway-access/public=true` | 2–5 | minAvailable 1 |
-| `internal` | `*.internal.example.com` | `gateway-access/internal=true` | 1–2 | none |
+| `public` | `*.apps.localhost` | `gateway-access/public=true` | 2–5 | minAvailable 1 |
+| `internal` | `*.internal.localhost` | `gateway-access/internal=true` | 1–2 | none |
 
 Per gateway the chart renders:
 

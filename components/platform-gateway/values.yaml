@@ -18,7 +18,7 @@ gateways:
     enabled: true
     className: istio
     # Hostnames this gateway serves. Routes must use a hostname inside it.
-    hostname: "*.example.com"
+    hostname: "*.apps.localhost"
     # kind has no cloud load balancer, so expose fixed NodePorts and let the
     # edge load balancer (cluster/edge-lb, stands in for a cloud LB) publish
     # them on the laptop. On EKS/GKE/AKS: serviceType LoadBalancer, no nodePorts.
@@ -47,7 +47,7 @@ gateways:
   internal:
     enabled: true
     className: istio
-    hostname: "*.internal.example.com"
+    hostname: "*.internal.localhost"
     serviceType: NodePort
     nodePorts:
       https: 31443
