@@ -26,10 +26,21 @@
     "name": "hello-alpha (east-west)",
     "team": "team-alpha",
     "scheme": "http",
-    "gateway": "hello-alpha-v1.team-alpha.svc.cluster.local",
+    "gateway": "hello-alpha.team-alpha.svc.cluster.local",
     "port": 5000,
-    "host": "hello-alpha-v1.team-alpha.svc.cluster.local",
+    "host": "hello-alpha.team-alpha.svc.cluster.local",
     "path": "/hello",
     "rps": 5
+  },
+  {
+    "id": "hello-alpha-health",
+    "name": "hello-alpha /health (east-west)",
+    "team": "team-alpha",
+    "scheme": "http",
+    "gateway": "hello-alpha.team-alpha.svc.cluster.local",
+    "port": 5000,
+    "host": "hello-alpha.team-alpha.svc.cluster.local",
+    "path": "/health",
+    "rps": 2
   }
 ]
