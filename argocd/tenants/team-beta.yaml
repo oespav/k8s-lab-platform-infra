@@ -16,7 +16,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
-  description: Team Beta: internal hello-beta tool
+  description: "Team Beta: internal hello-beta tool"
   # Only the team's own GitHub org.
   sourceRepos:
     - http://gitea.github-sim.svc.cluster.local:3000/team-beta/*

@@ -16,7 +16,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
-  description: Team Alpha: customer-facing hello-alpha
+  description: "Team Alpha: customer-facing hello-alpha"
   # Only the team's own GitHub org.
   sourceRepos:
     - http://gitea.github-sim.svc.cluster.local:3000/team-alpha/*
