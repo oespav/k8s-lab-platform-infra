@@ -25,4 +25,16 @@ parentRefs:
     sectionName: https
 ```
 
-On a cloud cluster set `gateways.<name>.serviceType=LoadBalancer`.
+## Exposure
+
+In the lab each gateway Service is a `NodePort` with fixed ports (pinned via
+the `service` key of the options ConfigMap), fronted by the edge load
+balancer in `k8s-lab/cluster/edge-lb`:
+
+| Gateway | NodePorts (https/http) | Laptop port | Redirect port |
+|---|---|---|---|
+| `public` | 30443 / 30080 | 8443 / 8080 | 8443 |
+| `internal` | 31443 / 31080 | 9443 | 9443 |
+
+On a cloud cluster set `serviceType: LoadBalancer`, drop `nodePorts` and
+`redirectPort`, and the provider creates the load balancer for you.
