@@ -162,7 +162,8 @@ def send_one(target):
         status = resp.status
         if status == 200:
             m = VERSION_RE.search(body)
-            version = m.group(1) if m else "unknown"
+            # A 200 whose body names no version (e.g. /health) is still a success.
+            version = m.group(1) if m else "OK (no version)"
     except Exception:
         conn.close()
         conns.pop(target.id, None)
