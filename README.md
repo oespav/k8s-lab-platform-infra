@@ -10,15 +10,17 @@ the one-time bootstrap.
 bootstrap/             one-time: install Argo CD, apply the root app
 argocd/                synced by the root app (app-of-apps)
   projects/            AppProject "platform"
-  apps/                one Application per platform component (ordered by sync wave)
+  apps/                one Application per platform component, named after it
+                       (deploy order comes from the sync-wave annotation, not the filename)
   tenants/             one file per dev team: Namespace + AppProject + Application
 components/            what those Applications deploy (values, manifests, charts)
   gateway-api-crds/    Gateway API v1.5.1 CRDs
-  istio/               istio/base + istio/istiod 1.30.4 values
+  istio/               istio/base, istiod (ambient profile), cni, ztunnel 1.30.4 values
   cert-manager/        cert-manager values
   trust-manager/       trust-manager values
   metrics-server/      metrics-server values (feeds HPAs and kubectl top)
   pki/                 lab root CA, lab-ca ClusterIssuer, CA trust bundle
+  mesh-policy/         mesh-wide STRICT mTLS (PeerAuthentication)
   namespaces/          platform-owned namespaces + gateway access labels
   platform-gateway/    Helm chart: shared public/internal HTTPS gateways
   argocd/              Argo CD values (self-managed) + its HTTPRoute
@@ -32,14 +34,18 @@ components/            what those Applications deploy (values, manifests, charts
 | -10 | AppProjects (platform, team-alpha, team-beta) |
 | -9 | gateway-api-crds |
 | -8 | istio-base |
-| -7 | istiod, cert-manager, metrics-server |
-| -6 | trust-manager |
-| -5 | pki |
+| -7 | istiod, istio-cni, cert-manager, metrics-server |
+| -6 | ztunnel, trust-manager |
+| -5 | mesh-policy (STRICT mTLS), pki |
 | -4 | platform-namespaces |
 | -3 | platform-gateway |
 | 0 | argocd (self-managed) |
 | 5 | traffic-console |
-| 10 | tenant apps (hello-alpha, hello-beta) |
+| 10 | tenant apps (hello-alpha, hello-beta) + team-alpha waypoint |
+
+This table is the human-readable order; the machine-readable one is the
+`argocd.argoproj.io/sync-wave` annotation in each file. Filenames carry no
+ordering, so adding a component never renames anything.
 
 The root app waits for each wave to be **Healthy** before starting the next
 (custom Application health check in `components/argocd/values.yaml`).
