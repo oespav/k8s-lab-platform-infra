@@ -1,0 +1,5 @@
+# Logical owner: platform-team. GitHub review requests go to the repository owner.
+# For an organization repo, replace @oespav with @<org>/platform-team.
+* @oespav
+# Onboarding changes also need a security reviewer in a real org.
+argocd/tenants/ @oespav
