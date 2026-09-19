@@ -21,7 +21,7 @@ spec:
         releaseName: istio-base
         valueFiles:
           - $values/components/istio/istio-base-values.yaml
-    - repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
       targetRevision: main
       ref: values
   ignoreDifferences:

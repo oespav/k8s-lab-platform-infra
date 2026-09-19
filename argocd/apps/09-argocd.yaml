@@ -22,10 +22,10 @@ spec:
         releaseName: argocd
         valueFiles:
           - $values/components/argocd/values.yaml
-    - repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
       targetRevision: main
       ref: values
-    - repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
       targetRevision: main
       path: components/argocd/extra
   syncPolicy:

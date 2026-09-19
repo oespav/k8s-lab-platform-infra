@@ -17,9 +17,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
   description: "Team Beta: internal hello-beta tool"
-  # Only the team's own GitHub org.
+  # Only the team's own repo.
   sourceRepos:
-    - http://gitea.github-sim.svc.cluster.local:3000/team-beta/*
+    - https://github.com/oespav/k8s-lab-hello-beta.git
   # Only the team's own namespace.
   destinations:
     - server: https://kubernetes.default.svc
@@ -48,7 +48,7 @@ metadata:
 spec:
   project: team-beta
   source:
-    repoURL: http://gitea.github-sim.svc.cluster.local:3000/team-beta/hello-beta.git
+    repoURL: https://github.com/oespav/k8s-lab-hello-beta.git
     targetRevision: main
     path: chart
     helm:

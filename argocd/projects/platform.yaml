@@ -10,7 +10,7 @@ metadata:
 spec:
   description: Cluster platform components owned by the platform team
   sourceRepos:
-    - http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    - https://github.com/oespav/k8s-lab-platform-infra.git
     - https://argoproj.github.io/argo-helm
     - https://charts.jetstack.io
     - https://istio-release.storage.googleapis.com/charts

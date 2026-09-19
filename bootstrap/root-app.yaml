@@ -9,7 +9,7 @@ metadata:
 spec:
   project: platform
   source:
-    repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
     targetRevision: main
     path: argocd
     directory:

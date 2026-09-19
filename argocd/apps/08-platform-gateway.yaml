@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
     namespace: infra-gw
   source:
-    repoURL: http://gitea.github-sim.svc.cluster.local:3000/platform-team/platform-infra.git
+    repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
     targetRevision: main
     path: components/platform-gateway
     helm:
