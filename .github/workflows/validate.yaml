@@ -1,0 +1,75 @@
+# Validates everything Argo CD would apply from this repo. A push to main is a
+# deploy, and invalid YAML anywhere under argocd/ stops the whole root app, so
+# these checks run on every pull request.
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  # Kubernetes + CRD schemas (Gateway API, Istio, Argo CD, cert-manager, ...)
+  CRD_SCHEMAS: https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sSfL https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin kubeconform
+
+      - name: Plain manifests (Applications, AppProjects, tenants, components)
+        # Skips Helm charts and Kustomize fragments; those are rendered below.
+        run: |
+          set -euo pipefail
+          kustomize_dirs=$(find components -name kustomization.yaml -exec dirname {} \; || true)
+          filter=$(echo "$kustomize_dirs" | sed '/^$/d;s|^|^|;s|$|/|' | paste -sd'|' -)
+          files=$(find argocd bootstrap components -name '*.yaml' \
+            | grep -vE 'values\.yaml|kustomization\.yaml|/templates/|Chart\.yaml' \
+            | { [ -n "$filter" ] && grep -vE "$filter" || cat; })
+          echo "$files" | tr ' ' '\n'
+          echo "$files" | xargs kubeconform -strict -summary \
+            -schema-location default -schema-location "$CRD_SCHEMAS"
+
+      - name: Helm charts under components/
+        run: |
+          set -euo pipefail
+          for chart in components/*/Chart.yaml; do
+            dir=$(dirname "$chart")
+            echo "::group::$dir"
+            helm lint "$dir"
+            helm template "$(basename "$dir")" "$dir" \
+              | kubeconform -strict -summary \
+                  -schema-location default -schema-location "$CRD_SCHEMAS"
+            echo "::endgroup::"
+          done
+
+      - name: Kustomize builds under components/
+        run: |
+          set -euo pipefail
+          for k in $(find components -name kustomization.yaml -exec dirname {} \;); do
+            echo "::group::$k"
+            kubectl kustomize "$k" \
+              | kubeconform -strict -summary -ignore-missing-schemas \
+                  -schema-location default -schema-location "$CRD_SCHEMAS"
+            echo "::endgroup::"
+          done
+
+      - name: Argo CD Applications point at repos the project allows
+        # Catches a source repo that would fail with "not permitted in project".
+        run: |
+          set -euo pipefail
+          allowed=$(awk '/^  sourceRepos:/{f=1;next} f&&/^  [a-zA-Z]/{f=0} f&&/^    - /{sub(/^    - /,""); print}' argocd/projects/platform.yaml)
+          echo "allowed sourceRepos:"; echo "$allowed"
+          for app in argocd/apps/*.yaml; do
+            for repo in $(grep -E '^\s+(- )?repoURL:' "$app" | sed 's/.*repoURL: //'); do
+              echo "$allowed" | grep -qxF "$repo" || { echo "::error file=$app::repoURL $repo is not in the platform project's sourceRepos"; exit 1; }
+            done
+          done
