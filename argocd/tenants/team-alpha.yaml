@@ -71,7 +71,7 @@ spec:
   project: team-alpha
   source:
     repoURL: https://github.com/oespav/k8s-lab-hello-alpha.git
-    targetRevision: main
+    targetRevision: hybrid-edge
     path: chart
     helm:
       releaseName: hello-alpha
