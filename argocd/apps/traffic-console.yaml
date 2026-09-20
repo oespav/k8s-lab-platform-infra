@@ -15,7 +15,7 @@ spec:
     namespace: traffic-console
   source:
     repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-    targetRevision: no-waypoint
+    targetRevision: main
     path: components/traffic-console
   syncPolicy:
     automated:
