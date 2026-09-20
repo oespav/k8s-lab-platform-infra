@@ -20,4 +20,3 @@ metadata:
   name: traffic-console
   labels:
     gateway-access/internal: "true"
-    istio.io/dataplane-mode: ambient   # its east-west calls carry a mesh identity
