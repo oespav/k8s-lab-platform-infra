@@ -14,8 +14,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: agentgateway-system
   sources:
-    - repoURL: oci://cr.agentgateway.dev/charts
-      chart: agentgateway-crds
+    # OCI Helm chart: the chart name is part of repoURL and there is no
+    # separate "chart:" field (Argo CD resolves <repoURL>:<targetRevision>).
+    - repoURL: oci://cr.agentgateway.dev/charts/agentgateway-crds
       targetRevision: 1.5.0
       helm:
         releaseName: agentgateway-crds
