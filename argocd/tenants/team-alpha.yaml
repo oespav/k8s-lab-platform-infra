@@ -8,25 +8,8 @@ metadata:
     gateway-access/public: "true"
     team: team-alpha
     istio.io/dataplane-mode: ambient   # in the mesh: mTLS + identity on every connection
-    istio.io/use-waypoint: waypoint    # traffic to this namespace's Services goes through the L7 waypoint
----
-# L7 waypoint proxy for team-alpha (Envoy, deployed by Istio). Platform-owned:
-# teams may attach HTTPRoutes and AuthorizationPolicies to it, but not create Gateways.
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: waypoint
-  namespace: team-alpha
-  labels:
-    istio.io/waypoint-for: service
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-spec:
-  gatewayClassName: istio-waypoint
-  listeners:
-    - name: mesh
-      port: 15008
-      protocol: HBONE
+    # no istio.io/use-waypoint: this namespace has no L7 waypoint on this branch.
+    # Encryption, identity and L4 AuthorizationPolicy still apply (ztunnel).
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -71,7 +54,7 @@ spec:
   project: team-alpha
   source:
     repoURL: https://github.com/oespav/k8s-lab-hello-alpha.git
-    targetRevision: main
+    targetRevision: no-waypoint
     path: chart
     helm:
       releaseName: hello-alpha

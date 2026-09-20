@@ -22,7 +22,7 @@ spec:
         valueFiles:
           - $values/components/metrics-server/values.yaml
     - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-      targetRevision: main
+      targetRevision: no-waypoint
       ref: values
   syncPolicy:
     automated:

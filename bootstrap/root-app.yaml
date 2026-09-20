@@ -10,7 +10,7 @@ spec:
   project: platform
   source:
     repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-    targetRevision: main
+    targetRevision: no-waypoint
     path: argocd
     directory:
       recurse: true
