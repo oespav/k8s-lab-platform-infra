@@ -1,0 +1,9 @@
+# The edge-gw release: the public gateway only, implemented by agentgateway.
+# Its namespace is enrolled in ambient, so calls to apps carry the identity
+# edge-gw/sa/public and app policies can allow exactly that.
+gateways:
+  internal:
+    enabled: false
+  public:
+    implementation: agentgateway
+    className: agentgateway

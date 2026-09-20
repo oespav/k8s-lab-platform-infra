@@ -1,0 +1,7 @@
+# The infra-gw release: internal gateway only, implemented by Istio.
+# The public gateway moved to edge-gw (see values-edge.yaml).
+gateways:
+  public:
+    enabled: false
+  internal:
+    implementation: istio

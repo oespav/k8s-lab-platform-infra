@@ -1,5 +1,46 @@
 {{- range $name, $gw := .Values.gateways }}
 {{- if $gw.enabled }}
+{{- $impl := $gw.implementation | default "istio" }}
+{{- if eq $impl "agentgateway" }}
+---
+# agentgateway reads this (via infrastructure.parametersRef) and merges each
+# overlay into the Deployment/Service/HPA/PDB it generates for the Gateway.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayParameters
+metadata:
+  name: {{ $name }}-gateway-options
+  labels:
+    {{- include "platform-gateway.labels" $ | nindent 4 }}
+spec:
+  {{- with $gw.nodePorts }}
+  service:
+    spec:
+      type: {{ $gw.serviceType }}
+      ports:
+        - port: 443
+          nodePort: {{ .https }}
+        - port: 80
+          nodePort: {{ .http }}
+  {{- end }}
+  {{- with $gw.autoscaling }}
+  horizontalPodAutoscaler:
+    spec:
+      minReplicas: {{ .minReplicas }}
+      maxReplicas: {{ .maxReplicas }}
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: {{ .targetCPUUtilizationPercentage }}
+  {{- end }}
+  {{- with $gw.podDisruptionBudget }}
+  podDisruptionBudget:
+    spec:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- else }}
 ---
 # Istio reads this ConfigMap (via infrastructure.parametersRef) and merges
 # each key into the Deployment/HPA/PDB it generates for the Gateway.
@@ -46,6 +87,7 @@ data:
     spec:
       {{- toYaml . | nindent 6 }}
   {{- end }}
+{{- end }}
 ---
 # Wildcard certificate for every hostname this gateway serves.
 apiVersion: cert-manager.io/v1
@@ -70,14 +112,21 @@ metadata:
   name: {{ $name }}
   labels:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
+  {{- if eq $impl "istio" }}
   annotations:
     networking.istio.io/service-type: {{ $gw.serviceType }}
+  {{- end }}
 spec:
-  gatewayClassName: {{ $gw.className }}
+  gatewayClassName: {{ $gw.className | default (eq $impl "agentgateway" | ternary "agentgateway" "istio") }}
   infrastructure:
     parametersRef:
+      {{- if eq $impl "agentgateway" }}
+      group: agentgateway.dev
+      kind: AgentgatewayParameters
+      {{- else }}
       group: ""
       kind: ConfigMap
+      {{- end }}
       name: {{ $name }}-gateway-options
   listeners:
     - name: https

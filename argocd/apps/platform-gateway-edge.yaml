@@ -1,22 +1,27 @@
-# Sync wave -5: the root app waits for lower waves to be Healthy first.
+# Sync wave -3: the root app waits for lower waves to be Healthy first.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mesh-policy
+  name: platform-gateway-edge
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-5"
+    argocd.argoproj.io/sync-wave: "-2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: platform
   destination:
     server: https://kubernetes.default.svc
-    namespace: istio-system
+    namespace: edge-gw
   source:
     repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
     targetRevision: hybrid-edge
-    path: components/mesh-policy
+    path: components/platform-gateway
+    helm:
+      releaseName: platform-gateway-edge
+      valueFiles:
+        - values.yaml
+        - values-edge.yaml
   syncPolicy:
     automated:
       prune: true

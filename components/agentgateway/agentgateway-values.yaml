@@ -1,0 +1,8 @@
+# agentgateway control plane: watches Gateway API resources and runs a proxy
+# Deployment per Gateway with gatewayClassName "agentgateway". Replaces istiod
+# + the Istio gateway controller; there is no mesh (no ztunnel, no sidecars).
+controller:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi

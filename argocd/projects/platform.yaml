@@ -15,6 +15,7 @@ spec:
     - https://charts.jetstack.io
     - https://istio-release.storage.googleapis.com/charts
     - https://kubernetes-sigs.github.io/metrics-server/
+    - cr.agentgateway.dev/charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"

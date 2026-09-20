@@ -1,26 +1,29 @@
-# Sync wave -7: the root app waits for lower waves to be Healthy first.
+# Sync wave -8: the root app waits for lower waves to be Healthy first.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cert-manager
+  name: agentgateway-crds
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-7"
+    argocd.argoproj.io/sync-wave: "-8"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: platform
   destination:
     server: https://kubernetes.default.svc
-    namespace: cert-manager
+    namespace: agentgateway-system
   sources:
-    - repoURL: https://charts.jetstack.io
-      chart: cert-manager
-      targetRevision: v1.21.2
+    # OCI registry registered as a Helm repo (components/argocd-repos), so the
+    # familiar repoURL + chart form works. The oci:// source style needs
+    # path "." which this Argo CD version normalises away and then rejects.
+    - repoURL: cr.agentgateway.dev/charts
+      chart: agentgateway-crds
+      targetRevision: 1.5.0
       helm:
-        releaseName: cert-manager
+        releaseName: agentgateway-crds
         valueFiles:
-          - $values/components/cert-manager/values.yaml
+          - $values/components/agentgateway/agentgateway-crds-values.yaml
     - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
       targetRevision: hybrid-edge
       ref: values

@@ -3,7 +3,7 @@
     "id": "hello-alpha",
     "name": "hello-alpha",
     "team": "team-alpha",
-    "gateway": "public-istio.infra-gw.svc.cluster.local",
+    "gateway": "public.edge-gw.svc.cluster.local",
     "host": "hello.apps.localhost",
     "path": "/hello",
     "rps": 10,

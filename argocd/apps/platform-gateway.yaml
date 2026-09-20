@@ -15,10 +15,13 @@ spec:
     namespace: infra-gw
   source:
     repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-    targetRevision: main
+    targetRevision: hybrid-edge
     path: components/platform-gateway
     helm:
       releaseName: platform-gateway
+      valueFiles:
+        - values.yaml
+        - values-internal.yaml
   syncPolicy:
     automated:
       prune: true

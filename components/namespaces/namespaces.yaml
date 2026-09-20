@@ -5,6 +5,17 @@ kind: Namespace
 metadata:
   name: infra-gw
 ---
+# Home of the agentgateway-backed public gateway. Enrolled in ambient so the
+# proxy's calls to app pods carry the identity edge-gw/sa/<gateway>, which the
+# teams' L4/L7 policies can then allow. Istio-managed gateways are NOT enrolled
+# (they speak HBONE natively); agentgateway proxies are ordinary pods.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-gw
+  labels:
+    istio.io/dataplane-mode: ambient
+---
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -23,10 +23,10 @@ spec:
         valueFiles:
           - $values/components/argocd/values.yaml
     - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-      targetRevision: main
+      targetRevision: hybrid-edge
       ref: values
     - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-      targetRevision: main
+      targetRevision: hybrid-edge
       path: components/argocd/extra
   syncPolicy:
     automated:

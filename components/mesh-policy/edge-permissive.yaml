@@ -1,0 +1,13 @@
+# The mesh-wide default is STRICT (istio-system/default): enrolled workloads
+# only accept mTLS. The public gateway is enrolled, but users reach it with
+# plain TLS from outside the cluster, which ztunnel sees as unauthenticated.
+# PERMISSIVE here lets that inbound traffic in, while the proxy's *outbound*
+# calls to apps are still mTLS with its mesh identity.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: edge-gw-permissive
+  namespace: edge-gw
+spec:
+  mtls:
+    mode: PERMISSIVE
