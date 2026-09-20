@@ -1,35 +1,29 @@
 {{- range $name, $gw := .Values.gateways }}
 {{- if $gw.enabled }}
 ---
-# Istio reads this ConfigMap (via infrastructure.parametersRef) and merges
-# each key into the Deployment/HPA/PDB it generates for the Gateway.
-apiVersion: v1
-kind: ConfigMap
+# Proxy customization for this gateway. The agentgateway control plane renders
+# a Deployment/Service/ServiceAccount per Gateway and merges these overlays on
+# top (strategic merge, like kubectl apply).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayParameters
 metadata:
-  name: {{ $name }}-gateway-options
+  name: {{ $name }}-params
   labels:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
-data:
+spec:
   {{- with $gw.nodePorts }}
   # Pin NodePorts so the edge load balancer can target them.
-  service: |
+  service:
     spec:
+      type: {{ $gw.serviceType }}
       ports:
         - port: 443
           nodePort: {{ .https }}
         - port: 80
           nodePort: {{ .http }}
   {{- end }}
-  deployment: |
-    spec:
-      template:
-        spec:
-          containers:
-            - name: istio-proxy
-              resources:
-                {{- toYaml $gw.resources | nindent 16 }}
   {{- with $gw.autoscaling }}
-  horizontalPodAutoscaler: |
+  horizontalPodAutoscaler:
     spec:
       minReplicas: {{ .minReplicas }}
       maxReplicas: {{ .maxReplicas }}
@@ -42,7 +36,7 @@ data:
               averageUtilization: {{ .targetCPUUtilizationPercentage }}
   {{- end }}
   {{- with $gw.podDisruptionBudget }}
-  podDisruptionBudget: |
+  podDisruptionBudget:
     spec:
       {{- toYaml . | nindent 6 }}
   {{- end }}
@@ -70,15 +64,13 @@ metadata:
   name: {{ $name }}
   labels:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
-  annotations:
-    networking.istio.io/service-type: {{ $gw.serviceType }}
 spec:
   gatewayClassName: {{ $gw.className }}
   infrastructure:
     parametersRef:
-      group: ""
-      kind: ConfigMap
-      name: {{ $name }}-gateway-options
+      group: agentgateway.dev
+      kind: AgentgatewayParameters
+      name: {{ $name }}-params
   listeners:
     - name: https
       port: 443

@@ -13,7 +13,7 @@ spec:
     - https://github.com/oespav/k8s-lab-platform-infra.git
     - https://argoproj.github.io/argo-helm
     - https://charts.jetstack.io
-    - https://istio-release.storage.googleapis.com/charts
+    - oci://cr.agentgateway.dev/charts
     - https://kubernetes-sigs.github.io/metrics-server/
   destinations:
     - server: https://kubernetes.default.svc

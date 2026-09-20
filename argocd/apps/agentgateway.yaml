@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio-cni
+  name: agentgateway
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-7"
@@ -12,17 +12,17 @@ spec:
   project: platform
   destination:
     server: https://kubernetes.default.svc
-    namespace: istio-system
+    namespace: agentgateway-system
   sources:
-    - repoURL: https://istio-release.storage.googleapis.com/charts
-      chart: cni
-      targetRevision: 1.30.4
+    - repoURL: oci://cr.agentgateway.dev/charts
+      chart: agentgateway
+      targetRevision: 1.5.0
       helm:
-        releaseName: istio-cni
+        releaseName: agentgateway
         valueFiles:
-          - $values/components/istio/istio-cni-values.yaml
+          - $values/components/agentgateway/agentgateway-values.yaml
     - repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
-      targetRevision: main
+      targetRevision: agentgateway
       ref: values
   syncPolicy:
     automated:
@@ -32,4 +32,5 @@ spec:
       limit: 10
       backoff: {duration: 10s, factor: 2, maxDuration: 3m}
     syncOptions:
+      - CreateNamespace=true
       - ServerSideApply=true

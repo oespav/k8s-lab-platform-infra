@@ -1,6 +1,10 @@
 # Shared gateways, one per exposure level. Install this chart once per
 # cluster, in its own namespace (e.g. infra-gw).
 #
+# Implemented by the agentgateway control plane (GatewayClass "agentgateway").
+# Per-gateway proxy customization (NodePorts, autoscaling, disruption budget)
+# goes through an AgentgatewayParameters resource referenced from the Gateway.
+#
 # Each gateway has two listeners:
 #   https (443) - app routes attach here (sectionName: https). TLS uses a
 #                 wildcard cert issued by cert-manager from the "lab-ca" issuer.
@@ -16,7 +20,7 @@ tls:
 gateways:
   public:
     enabled: true
-    className: istio
+    className: agentgateway
     # Hostnames this gateway serves. Routes must use a hostname inside it.
     hostname: "*.apps.localhost"
     # kind has no cloud load balancer, so expose fixed NodePorts and let the
@@ -46,7 +50,7 @@ gateways:
 
   internal:
     enabled: true
-    className: istio
+    className: agentgateway
     hostname: "*.internal.localhost"
     serviceType: NodePort
     nodePorts:

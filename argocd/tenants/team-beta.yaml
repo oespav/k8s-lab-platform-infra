@@ -7,7 +7,6 @@ metadata:
   labels:
     gateway-access/internal: "true"
     team: team-beta
-    istio.io/dataplane-mode: ambient   # in the mesh: mTLS + identity on every connection
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -36,8 +35,8 @@ spec:
     - {group: gateway.networking.k8s.io, kind: HTTPRoute}
     - {group: autoscaling, kind: HorizontalPodAutoscaler}
     - {group: policy, kind: PodDisruptionBudget}
-    # Teams decide who may call their services (identity-based, enforced by ztunnel).
-    - {group: security.istio.io, kind: AuthorizationPolicy}
+    # Gateway API + agentgateway policy for the team's own routes.
+    - {group: agentgateway.dev, kind: AgentgatewayPolicy}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -52,7 +51,7 @@ spec:
   project: team-beta
   source:
     repoURL: https://github.com/oespav/k8s-lab-hello-beta.git
-    targetRevision: main
+    targetRevision: agentgateway
     path: chart
     helm:
       releaseName: hello-beta

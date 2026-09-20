@@ -1,8 +1,0 @@
-# istio/cni: node agent that redirects traffic of ambient-enrolled pods
-# (namespace label istio.io/dataplane-mode=ambient) into ztunnel.
-profile: ambient
-cni:
-  resources:
-    requests:
-      cpu: 20m
-      memory: 64Mi
