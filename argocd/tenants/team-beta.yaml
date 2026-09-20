@@ -52,7 +52,7 @@ spec:
   project: team-beta
   source:
     repoURL: https://github.com/oespav/k8s-lab-hello-beta.git
-    targetRevision: no-waypoint
+    targetRevision: main
     path: chart
     helm:
       releaseName: hello-beta
