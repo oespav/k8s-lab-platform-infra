@@ -8,8 +8,11 @@ metadata:
     gateway-access/public: "true"
     team: team-alpha
     istio.io/dataplane-mode: ambient   # in the mesh: mTLS + identity on every connection
-    # no istio.io/use-waypoint: this namespace has no L7 waypoint on this branch.
-    # Encryption, identity and L4 AuthorizationPolicy still apply (ztunnel).
+    # No istio.io/use-waypoint: team-alpha has no L7 waypoint. Encryption,
+    # identity and L4 AuthorizationPolicy still apply -- ztunnel provides them.
+    # Re-adding one means this label plus an istio-waypoint Gateway here, and
+    # turning the team chart's meshRoute / authorizationPolicyL7 /
+    # ingressUseWaypoint back on. See docs/08-no-waypoint.md.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
