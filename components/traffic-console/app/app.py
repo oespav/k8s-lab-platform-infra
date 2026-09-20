@@ -139,34 +139,46 @@ class Target:
         return state
 
 
+def _new_conn(target):
+    if target.scheme == "http":
+        return http.client.HTTPConnection(target.gateway, target.port, timeout=5)
+    return GatewayConnection(target.gateway, target.port, target.host)
+
+
 def send_one(target):
     conns = getattr(_local, "conns", None)
     if conns is None:
         conns = _local.conns = {}
     conn = conns.get(target.id)
+    reused = conn is not None
     if conn is None:
-        if target.scheme == "http":
-            conn = http.client.HTTPConnection(target.gateway, target.port, timeout=5)
-        else:
-            conn = GatewayConnection(target.gateway, target.port, target.host)
-        conns[target.id] = conn
+        conn = conns[target.id] = _new_conn(target)
     headers = {"Host": target.host, "User-Agent": "traffic-console/1.0"}
     if target.canary and target.canary_header:
         headers[target.canary_header["name"]] = target.canary_header["value"]
     start = time.perf_counter()
     version, status = None, 0
-    try:
-        conn.request("GET", target.path, headers=headers)
-        resp = conn.getresponse()
-        body = resp.read().decode("utf-8", "replace")
-        status = resp.status
-        if status == 200:
-            m = VERSION_RE.search(body)
-            # A 200 whose body names no version (e.g. /health) is still a success.
-            version = m.group(1) if m else "OK (no version)"
-    except Exception:
-        conn.close()
-        conns.pop(target.id, None)
+    for attempt in (1, 2):
+        try:
+            conn.request("GET", target.path, headers=headers)
+            resp = conn.getresponse()
+            body = resp.read().decode("utf-8", "replace")
+            status = resp.status
+            if status == 200:
+                m = VERSION_RE.search(body)
+                # A 200 whose body names no version (e.g. /health) is still a success.
+                version = m.group(1) if m else "OK (no version)"
+            break
+        except Exception:
+            conn.close()
+            conns.pop(target.id, None)
+            # A reused keep-alive connection the server has since closed is not
+            # a failure of the request: retry once on a fresh connection. Only
+            # a fresh connection failing counts as an error.
+            if attempt == 1 and reused:
+                conn = conns[target.id] = _new_conn(target)
+                continue
+            break
     target.record(version, status, (time.perf_counter() - start) * 1000)
 
 
