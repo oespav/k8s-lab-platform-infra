@@ -1,0 +1,27 @@
+# Sync wave -10: repository credentials must exist before any Application
+# that pulls charts from those repositories syncs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-repos
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  source:
+    repoURL: https://github.com/oespav/k8s-lab-platform-infra.git
+    targetRevision: agentgateway
+    path: components/argocd-repos
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff: {duration: 10s, factor: 2, maxDuration: 3m}

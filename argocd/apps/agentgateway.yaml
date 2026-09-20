@@ -14,11 +14,12 @@ spec:
     server: https://kubernetes.default.svc
     namespace: agentgateway-system
   sources:
-    # OCI Helm chart: the chart name is part of repoURL and there is no
-    # separate "chart:" field (Argo CD resolves <repoURL>:<targetRevision>).
-    - repoURL: oci://cr.agentgateway.dev/charts/agentgateway
+    # OCI registry registered as a Helm repo (components/argocd-repos), so the
+    # familiar repoURL + chart form works. The oci:// source style needs
+    # path "." which this Argo CD version normalises away and then rejects.
+    - repoURL: cr.agentgateway.dev/charts
+      chart: agentgateway
       targetRevision: 1.5.0
-      path: "."
       helm:
         releaseName: agentgateway
         valueFiles:

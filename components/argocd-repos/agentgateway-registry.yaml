@@ -1,0 +1,17 @@
+# Registers the agentgateway OCI registry as a Helm repository for Argo CD.
+# Needed because this Argo CD version normalises an OCI source's path "." to
+# empty and then rejects it; the Helm-credential style (repoURL without the
+# oci:// scheme + a chart field + enableOCI) works instead.
+# Public registry: no credentials.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agentgateway-charts
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: agentgateway-charts
+  type: helm
+  url: cr.agentgateway.dev/charts
+  enableOCI: "true"
