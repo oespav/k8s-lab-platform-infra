@@ -40,6 +40,28 @@ controller:
 repoServer:
   resources:
     requests: {cpu: 50m, memory: 128Mi}
+  # repo-server fetches Helm charts and clones Git over HTTPS itself; node
+  # trust does not reach into a pod. Behind a TLS-inspecting proxy those
+  # fetches fail with "x509: certificate signed by unknown authority".
+  #
+  # Go reads the default bundle *and* every directory in SSL_CERT_DIR, so
+  # this adds the corporate CA without replacing the public roots.
+  #
+  # The Secret is created out-of-band by k8s-lab-cluster (scripts/corp-ca.sh),
+  # not committed here: it is a public certificate, but it names the employer.
+  # optional=true so clusters with no interception still start.
+  env:
+    - name: SSL_CERT_DIR
+      value: /etc/ssl/certs:/etc/ssl/corp
+  volumes:
+    - name: corp-ca
+      secret:
+        secretName: corp-ca
+        optional: true
+  volumeMounts:
+    - name: corp-ca
+      mountPath: /etc/ssl/corp
+      readOnly: true
 server:
   resources:
     requests: {cpu: 50m, memory: 64Mi}
