@@ -1,5 +1,10 @@
 {{- range $name, $gw := .Values.gateways }}
 {{- if $gw.enabled }}
+{{- /* Listener ports. Istio uses them as the gateway Service's ports, so on a
+       LoadBalancer they are also the ports the load balancer publishes. */}}
+{{- $ports := default dict $gw.ports }}
+{{- $httpsPort := default 443 $ports.https }}
+{{- $httpPort := default 80 $ports.http }}
 ---
 # Istio reads this ConfigMap (via infrastructure.parametersRef) and merges
 # each key into the Deployment/HPA/PDB it generates for the Gateway.
@@ -11,13 +16,13 @@ metadata:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
 data:
   {{- with $gw.nodePorts }}
-  # Pin NodePorts so the edge load balancer can target them.
+  # Only when nodePorts is set: pin them so an external load balancer can target them.
   service: |
     spec:
       ports:
-        - port: 443
+        - port: {{ $httpsPort }}
           nodePort: {{ .https }}
-        - port: 80
+        - port: {{ $httpPort }}
           nodePort: {{ .http }}
   {{- end }}
   deployment: |
@@ -81,7 +86,7 @@ spec:
       name: {{ $name }}-gateway-options
   listeners:
     - name: https
-      port: 443
+      port: {{ $httpsPort }}
       protocol: HTTPS
       hostname: {{ $gw.hostname | quote }}
       tls:
@@ -96,7 +101,7 @@ spec:
             matchLabels:
               {{ $gw.accessLabel }}: "true"
     - name: http
-      port: 80
+      port: {{ $httpPort }}
       protocol: HTTP
       hostname: {{ $gw.hostname | quote }}
       allowedRoutes:

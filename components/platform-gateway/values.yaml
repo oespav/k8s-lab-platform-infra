@@ -2,9 +2,11 @@
 # cluster, in its own namespace (e.g. infra-gw).
 #
 # Each gateway has two listeners:
-#   https (443) - app routes attach here (sectionName: https). TLS uses a
-#                 wildcard cert issued by cert-manager from the "lab-ca" issuer.
-#   http  (80)  - only a platform-owned redirect to HTTPS; apps can't attach.
+#   https - app routes attach here (sectionName: https). TLS uses a
+#           wildcard cert issued by cert-manager from the "lab-ca" issuer.
+#   http  - only a platform-owned redirect to HTTPS; apps can't attach.
+# Listener ports default to 443/80 (`ports`). Istio uses them as the gateway
+# Service's ports, and the load balancer publishes those same ports.
 # App namespaces need the gateway's access label (e.g. gateway-access/public=true)
 # to attach routes; tenants get it from argocd/tenants/<team>.yaml.
 
@@ -19,13 +21,14 @@ gateways:
     className: istio
     # Hostnames this gateway serves. Routes must use a hostname inside it.
     hostname: "*.apps.localhost"
-    # kind has no cloud load balancer, so expose fixed NodePorts and let the
-    # edge load balancer (cluster/edge-lb, stands in for a cloud LB) publish
-    # them on the laptop. On EKS/GKE/AKS: serviceType LoadBalancer, no nodePorts.
-    serviceType: NodePort
-    nodePorts:
-      https: 30443
-      http: 30080
+    # A real LoadBalancer Service. In the lab, cloud-provider-kind
+    # (k8s-lab-cluster) provides it and publishes the Service ports 1:1 on the
+    # laptop -- so every gateway needs its own ports, or the second load
+    # balancer can't bind. On EKS/GKE/AKS drop `ports` and `redirectPort`.
+    serviceType: LoadBalancer
+    ports:
+      https: 8443
+      http: 8080
     # Port the HTTP->HTTPS redirect points at. Omit when clients use 443.
     redirectPort: 8443
     # Namespaces need this label (value "true") to attach routes.
@@ -48,10 +51,10 @@ gateways:
     enabled: true
     className: istio
     hostname: "*.internal.localhost"
-    serviceType: NodePort
-    nodePorts:
-      https: 31443
-      http: 31080
+    serviceType: LoadBalancer
+    ports:
+      https: 9443
+      http: 9080
     redirectPort: 9443
     accessLabel: gateway-access/internal
     autoscaling:

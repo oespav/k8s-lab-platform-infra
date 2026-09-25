@@ -27,14 +27,20 @@ parentRefs:
 
 ## Exposure
 
-In the lab each gateway Service is a `NodePort` with fixed ports (pinned via
-the `service` key of the options ConfigMap), fronted by the edge load
-balancer in `k8s-lab/cluster/edge-lb`:
+Each gateway Service is a `LoadBalancer`. In the lab the load balancer comes
+from cloud-provider-kind (run by `k8s-lab-cluster`), which publishes each
+Service's ports 1:1 on the laptop. Istio takes the Service ports from the
+listener ports, so those are set per gateway in `values.yaml` (`ports`), and
+they must not overlap: two load balancers can't both bind the same laptop port.
 
-| Gateway | NodePorts (https/http) | Laptop port | Redirect port |
-|---|---|---|---|
-| `public` | 30443 / 30080 | 8443 / 8080 | 8443 |
-| `internal` | 31443 / 31080 | 9443 | 9443 |
+| Gateway | Listener = Service = laptop port (https / http) | Redirect port |
+|---|---|---|
+| `public` | 8443 / 8080 | 8443 |
+| `internal` | 9443 / 9080 | 9443 |
 
-On a cloud cluster set `serviceType: LoadBalancer`, drop `nodePorts` and
-`redirectPort`, and the provider creates the load balancer for you.
+A Gateway is only `Programmed` once its Service has an address, so if the load
+balancer isn't running this app never turns Healthy and every later sync wave
+waits behind it.
+
+On a cloud cluster drop `ports` and `redirectPort`: the listeners fall back to
+443/80 and the provider's load balancer serves them.
