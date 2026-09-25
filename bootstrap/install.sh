@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ARGOCD_CHART_VERSION=10.9.2   # keep in sync with argocd/apps/09-argocd.yaml
+ARGOCD_CHART_VERSION=10.9.2   # keep in sync with argocd/apps/argocd.yaml
 
 # The only kube context this script may touch. It installs cluster-wide
 # resources and hands the cluster to Argo CD, so running it against the wrong

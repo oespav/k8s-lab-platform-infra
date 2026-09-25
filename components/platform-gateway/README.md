@@ -1,7 +1,7 @@
 # platform-gateway chart
 
 Shared Istio Gateway API gateways, owned by the platform team, deployed by
-Argo CD (`argocd/apps/08-platform-gateway.yaml`) into `infra-gw`.
+Argo CD (`argocd/apps/platform-gateway.yaml`) into `infra-gw`.
 
 | Gateway | Hostnames | Access label | Replicas (HPA) | PDB |
 |---|---|---|---|---|
