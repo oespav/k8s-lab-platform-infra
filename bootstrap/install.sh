@@ -44,3 +44,15 @@ helm upgrade --install argocd argo/argo-cd --version "$ARGOCD_CHART_VERSION" \
 
 kubectl --context "$KUBE_CONTEXT" apply -f argocd/projects/platform.yaml -f bootstrap/root-app.yaml
 echo "Argo CD installed; the root app now syncs argocd/ from Git."
+
+# The lab CA is created by the pki app, so it can't be trusted until that app
+# has synced -- and it is new with every cluster, so a browser that trusted
+# the previous one rejects every gateway certificate until it is replaced.
+cat <<'EOF'
+
+Next, once the pki app is Healthy (a few minutes; kubectl -n argocd get app pki):
+
+  cd ../k8s-lab-cluster && scripts/trust-ca.sh --install
+
+Needed after every rebuild: each cluster has a new lab CA.
+EOF
