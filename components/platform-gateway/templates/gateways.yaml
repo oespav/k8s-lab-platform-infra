@@ -15,15 +15,24 @@ metadata:
   labels:
     {{- include "platform-gateway.labels" $ | nindent 4 }}
 data:
-  {{- with $gw.nodePorts }}
-  # Only when nodePorts is set: pin them so an external load balancer can target them.
+  {{- if or $gw.nodePorts $gw.hideStatusPort }}
+  # Patched into the gateway Service (strategic merge):
+  #   nodePorts       pin them so an external load balancer can target them
+  #   hideStatusPort  drop Istio's health port 15021, which Istio adds to every
+  #                   gateway Service -- two LoadBalancers can't both publish it
   service: |
     spec:
       ports:
+        {{- with $gw.nodePorts }}
         - port: {{ $httpsPort }}
           nodePort: {{ .https }}
         - port: {{ $httpPort }}
           nodePort: {{ .http }}
+        {{- end }}
+        {{- if $gw.hideStatusPort }}
+        - port: 15021
+          $patch: delete
+        {{- end }}
   {{- end }}
   deployment: |
     spec:

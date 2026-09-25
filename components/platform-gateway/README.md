@@ -32,6 +32,9 @@ from cloud-provider-kind (run by `k8s-lab-cluster`), which publishes each
 Service's ports 1:1 on the laptop. Istio takes the Service ports from the
 listener ports, so those are set per gateway in `values.yaml` (`ports`), and
 they must not overlap: two load balancers can't both bind the same laptop port.
+That includes Istio's health port 15021, which Istio adds to every gateway
+Service; `hideStatusPort: true` removes it from the Service (probes go to the
+pod, so nothing in the lab needs it there).
 
 | Gateway | Listener = Service = laptop port (https / http) | Redirect port |
 |---|---|---|

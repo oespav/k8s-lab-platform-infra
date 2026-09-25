@@ -29,6 +29,11 @@ gateways:
     ports:
       https: 8443
       http: 8080
+    # Istio also puts its health port 15021 on every gateway Service; in the lab
+    # that would be a third port both load balancers fight over. Kubelet probes
+    # go to the pod, so nothing needs it on the Service. Keep it on a cloud LB
+    # that health-checks through it.
+    hideStatusPort: true
     # Port the HTTP->HTTPS redirect points at. Omit when clients use 443.
     redirectPort: 8443
     # Namespaces need this label (value "true") to attach routes.
@@ -55,6 +60,7 @@ gateways:
     ports:
       https: 9443
       http: 9080
+    hideStatusPort: true
     redirectPort: 9443
     accessLabel: gateway-access/internal
     autoscaling:
