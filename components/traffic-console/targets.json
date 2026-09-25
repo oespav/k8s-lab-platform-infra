@@ -4,6 +4,7 @@
     "name": "hello-alpha",
     "team": "team-alpha",
     "gateway": "public-istio.infra-gw.svc.cluster.local",
+    "port": 8443,
     "host": "hello.apps.localhost",
     "path": "/hello",
     "rps": 10,
@@ -17,6 +18,7 @@
     "name": "hello-beta",
     "team": "team-beta",
     "gateway": "internal-istio.infra-gw.svc.cluster.local",
+    "port": 9443,
     "host": "tools.internal.localhost",
     "path": "/hello",
     "rps": 5
